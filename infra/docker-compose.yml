@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testdb
+    volumes:
+      - ../postgres_db/ddl/scr/init_ddl.sql:/docker-entrypoint-initdb.d/init_ddl.sql
+      - ../postgres_db/dml/scr/init_dml.sql:/docker-entrypoint-initdb.d/init_dml.sql
+      - ../postgres_db/dml/scr/scr_data_mart.sql:/docker-entrypoint-initdb.d/scr_data_mart.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    depends_on:
+      - postgres
+    ports:
+      - "8123:8123"
+    volumes:
+      - ../scr/scr_clickhouse.sql:/docker-entrypoint-initdb.d/scr_clickhouse.sql
